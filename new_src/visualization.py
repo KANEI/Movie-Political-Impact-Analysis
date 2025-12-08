@@ -1,14 +1,12 @@
 import os
 import matplotlib.pyplot as plt
 import japanize_matplotlib
-import seaborn as sns
-import scipy.stats as stats
-import arviz as az
 import pandas as pd
+import numpy as np
 import statsmodels.formula.api as smf
 
 # 保存先フォルダの設定
-IMAGE_DIR = "image"
+IMAGE_DIR = "new_image"
 
 # フォルダがなければ作成する
 if not os.path.exists(IMAGE_DIR):
@@ -52,12 +50,14 @@ def save_regression_summary(model, filename):
     plt.close()
 
 def plot_distributions(df):
-    """ニュース数や政治的指標の分布を描画"""
+    """
+    ニュース数や政治的指標の分布を描画
+    """
     fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(12, 10))
     
-    columns = ['news_count', 'political_count', 'political_ratio']
+    columns = ['actor_fame', 'actor_fame_log', 'political_news_count']
     colors = ['skyblue', 'salmon', 'salmon']
-    titles = ['News Count', 'Political Count', 'Political Ratio']
+    titles = ['Actor Fame', 'Actor Fame Log', 'Political News Count']
 
     for ax, col, color, title in zip(axes, columns, colors, titles):
         ax.hist(df[col], bins=20, color=color, edgecolor='black', alpha=0.7)
@@ -67,61 +67,81 @@ def plot_distributions(df):
 
     save_plot("distributions.png")
 
-def plot_financials(df):
-    """予算と興行収入の分布（通常・対数）を描画"""
-    # 通常スケール
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
-    axes[0].hist(df['revenue'], bins=20, color='skyblue', edgecolor='black', alpha=0.7)
-    axes[0].set_title('Revenue Histogram')
-    axes[1].hist(df['budget'], bins=20, color='salmon', edgecolor='black', alpha=0.7)
-    axes[1].set_title('Budget Histogram')
-    save_plot("financials_raw.png")
+def plot_additional_exploratory_analysis(df):
+    """
+    追加の探索的データ分析（散布図、相関、箱ひげ図）を行い保存する
+    """
+    print("\n--- Generating Additional Exploratory Plots ---")
 
-    # 対数スケール
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
-    axes[0].hist(df['revenue_log'], bins=20, color='skyblue', edgecolor='black', alpha=0.7)
-    axes[0].set_title('Log Revenue Histogram')
-    axes[1].hist(df['budget_log'], bins=20, color='salmon', edgecolor='black', alpha=0.7)
-    axes[1].set_title('Log Budget Histogram')
-    save_plot("financials_log.png")
+    # 箱ひげ図: political_news_count
+    plt.figure(figsize=(6, 8))
+    # boxplotはNaNが含まれていると描画できない場合があるためdropnaする
+    plt.boxplot(df['political_news_count'].dropna(), patch_artist=True, 
+                boxprops=dict(facecolor="lightblue"))
+    plt.title('Boxplot: Political News Count')
+    plt.ylabel('Count')
+    plt.grid(True, linestyle='--', alpha=0.6)
+    save_plot("boxplot_political.png")
 
-def plot_qq_and_reg(df):
-    """Q-Qプロットと回帰プロット"""
-    # Q-Q Plot
-    plt.figure(figsize=(6, 4))
-    stats.probplot(df['revenue_log'], dist="norm", plot=plt)
-    plt.title("Q-Q Plot of Revenue Log")
-    save_plot("qq_plot_revenue_log.png")
+    # 箱ひげ図: actor_fame_log
+    plt.figure(figsize=(6, 8))
+    plt.boxplot(df['actor_fame_log'].dropna(), patch_artist=True,
+                boxprops=dict(facecolor="lightgreen"))
+    plt.title('Boxplot: Actor Fame Log')
+    plt.ylabel('Log Value')
+    plt.grid(True, linestyle='--', alpha=0.6)
+    save_plot("boxplot_fame.png")
 
-    # Regression Plot
-    plt.figure(figsize=(6, 4))
-    sns.regplot(x="political_ratio", y="revenue_log", data=df)
-    plt.title("Regression: Political Ratio vs Revenue Log")
-    save_plot("regression_political_revenue.png")
+    # 散布図: political_news_count vs revenue_log
+    plt.figure(figsize=(8, 6))
+    plt.scatter(df['political_news_count'], df['revenue_log'], alpha=0.6, edgecolors='w', s=60)
+    plt.title('Scatter: Political News Count vs Revenue Log')
+    plt.xlabel('Political News Count')
+    plt.ylabel('Revenue Log')
+    plt.grid(True, linestyle='--', alpha=0.6)
+    save_plot("scatter_political_revenue.png")
 
-def plot_heatmap(df):
-    """クロス集計のヒートマップ"""
-    pivot_table = df.pivot_table(
-        index='political_ratio_level', 
-        columns='over_100news', 
-        values='revenue_log', 
-        aggfunc='mean'
-    )
+    # 散布図: political_news_count vs actor_fame_log
+    plt.figure(figsize=(8, 6))
+    plt.scatter(df['political_news_count'], df['actor_fame_log'], alpha=0.6, color='orange', edgecolors='w', s=60)
+    plt.title('Scatter: Political News Count vs Actor Fame Log')
+    plt.xlabel('Political News Count')
+    plt.ylabel('Actor Fame Log')
+    plt.grid(True, linestyle='--', alpha=0.6)
+    save_plot("scatter_political_fame.png")
+
+    # 相関行列の計算と表示
+    corr_cols = ["political_news_count", 'actor_fame_log']
+    corr_mat = df[corr_cols].corr()
+    print("\n[Correlation Matrix]")
+    print(corr_mat)
     
-    plt.figure(figsize=(6, 4))
-    sns.heatmap(pivot_table, annot=True, fmt=".2f", cmap="YlGnBu")
-    plt.title("Heatmap of Revenue Log")
-    save_plot("heatmap_revenue_interaction.png")
+    ## 相関行列をヒートマップとして保存
+    fig, ax = plt.subplots(figsize=(6, 5))
+    cax = ax.matshow(corr_mat, cmap='coolwarm', vmin=-1, vmax=1)
+    fig.colorbar(cax)
+    
+    ## 軸ラベルの設定
+    ticks = np.arange(len(corr_cols))
+    ax.set_xticks(ticks)
+    ax.set_yticks(ticks)
+    ax.set_xticklabels(corr_cols, rotation=15, ha='left')
+    ax.set_yticklabels(corr_cols)
+    
+    ## 値をセル内に表示
+    for i in range(len(corr_cols)):
+        for j in range(len(corr_cols)):
+            ax.text(j, i, f"{corr_mat.iloc[i, j]:.2f}",
+                    ha="center", va="center", color="black", fontsize=12)
+            
+    plt.title("Correlation Matrix", pad=20)
+    save_plot("correlation_heatmap.png")
+
+    
 
 def analyze_threshold_sensitivity(df, formula_template, target_term, quantiles=None):
     """
     閾値を変動させてロジスティック回帰を行い、係数の安定性をプロットする
-    
-    Parameters:
-    - df: データフレーム
-    - formula_template: "target ~ x1 + x2" の形式
-    - target_term: 確認したい説明変数の名前
-    - quantiles: 試したい分位点のリスト
     """
     if quantiles is None:
         quantiles = [0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65]

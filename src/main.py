@@ -19,7 +19,8 @@ def main():
     plot_financials(df)
     plot_qq_and_reg(df)
     plot_heatmap(df)
-
+    # ここに散布図
+    
     # 共通フォーミュラ
     base_formula = """
         political_ratio * over_100news + budget_log + belongs_to_collection + 
@@ -63,7 +64,7 @@ def main():
     target_variable = 'political_ratio:over_100news' 
     
     # 数式テンプレート (目的変数は関数内で書き換えるので dummy でOK)
-    formula_template = f"dummy ~ budget_log + {base_formula}"
+    formula_template = f"dummy ~ {base_formula}"
     
     analyze_threshold_sensitivity(df, formula_template, target_variable)
 
