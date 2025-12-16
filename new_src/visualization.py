@@ -67,6 +67,24 @@ def plot_distributions(df):
 
     save_plot("distributions.png")
 
+def plot_financials(df):
+    """予算と興行収入の分布（通常・対数）を描画"""
+    # 通常スケール
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
+    axes[0].hist(df['revenue'], bins=20, color='skyblue', edgecolor='black', alpha=0.7)
+    axes[0].set_title('Revenue Histogram')
+    axes[1].hist(df['budget'], bins=20, color='salmon', edgecolor='black', alpha=0.7)
+    axes[1].set_title('Budget Histogram')
+    save_plot("financials_raw.png")
+
+    # 対数スケール
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
+    axes[0].hist(df['revenue_log'], bins=20, color='skyblue', edgecolor='black', alpha=0.7)
+    axes[0].set_title('Log Revenue Histogram')
+    axes[1].hist(df['budget_log'], bins=20, color='salmon', edgecolor='black', alpha=0.7)
+    axes[1].set_title('Log Budget Histogram')
+    save_plot("financials_log.png")
+
 def plot_additional_exploratory_analysis(df):
     """
     追加の探索的データ分析（散布図、相関、箱ひげ図）を行い保存する

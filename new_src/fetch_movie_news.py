@@ -152,7 +152,7 @@ def preprocess_target_data(df):
     # 予算・収入の数値化
     df['budget'] = pd.to_numeric(df['budget'], errors='coerce')
     df['revenue'] = pd.to_numeric(df['revenue'], errors='coerce')
-    df = df[(df['budget'] > 1000) & (df['revenue'] > 1000)] # 極端に低いものを除外
+    df = df[(df['budget'] > 0) & (df['revenue'] > 0)]
     
     return df.reset_index(drop=True)
 

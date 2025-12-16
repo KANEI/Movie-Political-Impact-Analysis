@@ -1,6 +1,6 @@
 import statsmodels.formula.api as smf
 from data_processing import load_and_preprocess_data
-from visualization import plot_distributions, plot_additional_exploratory_analysis, save_regression_summary
+from visualization import plot_distributions, plot_financials, plot_additional_exploratory_analysis, save_regression_summary
 from visualization import analyze_threshold_sensitivity
 from bayesian_analysis import execute_bayesian_analysis
 
@@ -13,6 +13,7 @@ def main():
     # 可視化して画像を保存
     print("\nGenerating visualizations...")
     plot_distributions(df)
+    plot_financials(df)
     plot_additional_exploratory_analysis(df)
     print(df[["actor_fame_log", "budget_log", "political_news_count"]].corr())
 
