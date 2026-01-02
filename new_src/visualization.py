@@ -129,7 +129,7 @@ def plot_additional_exploratory_analysis(df):
     save_plot("scatter_political_fame.png")
 
     # 相関行列の計算と表示
-    corr_cols = ["political_news_count", 'actor_fame_log']
+    corr_cols = ["political_news_count", 'actor_fame_log','budget_log']
     corr_mat = df[corr_cols].corr()
     print("\n[Correlation Matrix]")
     print(corr_mat)
